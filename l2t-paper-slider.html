@@ -297,15 +297,31 @@ Custom property | Description | Default
           reflectToAttribute: true,
           observer: '_reInit'
         },
+        /**
+        * Disable the Key Binding
+        *
+        * @attribute disable-key-bind
+        * @type Boolean
+        * @default false
+        */
+        disableKeyBind: {
+          type: Boolean,
+          value: false,
+          observer: 'disableKeyBindings'
+        }
       },
 
-      // Key Bindings //
-
+      // Enable and disable the Key Bindings//
       keyBindings: {
         'right' : '_keyRight',
         'left'  : '_keyLeft',
-        // 'space' : '_spaceCatcher',
+        'space' : '_spaceCatcher',
         'enter' : '_spaceCatcher',
+      },
+      disableKeyBindings: function() {
+        if (this.disableKeyBind){
+          this._keyBindings = [];
+        }
       },
 
       // Private //

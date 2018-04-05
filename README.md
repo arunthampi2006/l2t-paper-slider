@@ -1,16 +1,16 @@
 # < l2t-paper-slider >
 
-Polymer element for displaying slides in a carousel. 
-Have a quick look at the [Component page](https://www.webcomponents.org/element/Link2Twenty/l2t-paper-slider/l2t-paper-slider) 
+Polymer element for displaying slides in a carousel.
+Have a quick look at the [Component page](https://www.webcomponents.org/element/Link2Twenty/l2t-paper-slider/l2t-paper-slider)
 
 ![Screenshot](https://media.giphy.com/media/3o72Fh8f8VwsTrvSGA/giphy.gif)
 
 ## Install with bower
 
-First you need bower, [see their site](http://bower.io/) for details 
+First you need bower, [see their site](http://bower.io/) for details
 
 ```
-bower install --save l2t-paper-slider
+bower install --save arunthampi2006/l2t-paper-slider
 ```
 
 ## Examples
@@ -25,7 +25,7 @@ Each slide must be within a paper-slide tag, but other than that you have comple
         --paper-slide-height: 200px;
 	--paper-slide-font-size: 64px;
       }
-      
+
       paper-slide {
         line-height: 200px;
         text-align: center;
@@ -49,7 +49,7 @@ Each slide must be within a paper-slide tag, but other than that you have comple
     <paper-slide>#4</paper-slide>
   </l2t-paper-slider>
 ```
-  
+
 There is also auto progression and slide duration for how long it should remain on one slide
 
 <!---
@@ -60,7 +60,7 @@ There is also auto progression and slide duration for how long it should remain 
       l2t-paper-slider {
         --paper-slide-height: 200px;
       }
-      
+
       paper-slide {
         line-height: 200px;
         font-size: 64px;
@@ -84,7 +84,7 @@ There is also auto progression and slide duration for how long it should remain 
     <paper-slide>#3</paper-slide>
   </l2t-paper-slider>
 ```
-  
+
 You can set a different default start position, the first start postion is 0 (as opposed to 1)
 
 <!---
@@ -95,7 +95,7 @@ You can set a different default start position, the first start postion is 0 (as
       l2t-paper-slider {
         --paper-slide-height: 200px;
       }
-      
+
       paper-slide {
         line-height: 200px;
         font-size: 64px;
@@ -118,7 +118,7 @@ You can set a different default start position, the first start postion is 0 (as
     <paper-slide>#2</paper-slide>
   </l2t-paper-slider>
 ```
-  
+
 ## Styling
 
 The following custom properties are available for styling:
@@ -146,7 +146,8 @@ The following custom properties are available for styling:
 | slideDuration | Number of seconds each slide should remain for | Number | 5 |
 | hideNav | Boolean value to state if nav should should hidden | Boolean | false |
 | position | Number for storing start position of slides | Number | 0 |
-| disableSwipe | Boolean value to state if swipe shoud work | Boolean | false |
+| disableSwipe | Boolean value to state if swipe should work | Boolean | false |
+| disableKeyBind | Boolean value to state if disable key bind should work | Boolean | false |
 | sensitivity | String to storing high, low or default swipe sensitivity | String | 'default' |
 
 ### Private
