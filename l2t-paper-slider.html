@@ -321,6 +321,11 @@ Custom property | Description | Default
       disableKeyBindings: function() {
         if (this.disableKeyBind){
           this._keyBindings = [];
+          document.onkeydown = function(e){
+             e = e || window.event;
+             var k = e.keyCode || e.which;
+             return !(k === 9);
+          }
         }
       },
 
