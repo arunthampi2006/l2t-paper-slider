@@ -308,6 +308,11 @@ Custom property | Description | Default
           type: Boolean,
           value: false,
           observer: 'disableKeyBindings'
+        },
+        keys: {
+          type: String,
+          value: '',
+          observer: 'enableKeys'
         }
       },
 
@@ -326,6 +331,16 @@ Custom property | Description | Default
              var k = e.keyCode || e.which;
              return !(k === 9);
           }
+        }
+      },
+      enableKeys: function() {
+        if(this.keys === 'enableKeys'){
+          document.onkeydown = function(e){
+            e = e || window.event;
+            var k = e.keyCode || e.which;
+            return k;
+          }
+          this.set('keys','');
         }
       },
 
