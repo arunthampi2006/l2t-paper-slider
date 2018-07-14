@@ -150,494 +150,502 @@ Custom property | Description | Default
   </template>
 </dom-module>
 <script>
-  ( function () {
-    Polymer({
-      is: 'l2t-paper-slider',
-      listeners: {
-        'container.track': '_swipeHandler'
-      },
-      behaviors: [
-        Polymer.IronA11yKeysBehavior
-      ],
-      hostAttributes: {
-        tabindex: 0
-      },
-      properties: {
-
-        // Private //
-
-        /**
-        * Array for storing number
-        * leading up to totalSlides
-        *
-        * @attribute _totalDots
-        * @type Array
-        * @default []
-        */
-        _totalDots: {
-          type: Array ,
-          value: [],
-          notify: true,
-          computed: '_createDots(totalSlides)'
-        },
-        /**
-        * Object for storing
-        * all the styles of the
-        * dot elements
-        *
-        * @attribute _dotStyles
-        * @type Object
-        * @default NULL
-        */
-        _dotStyles: {
-          type: Object,
-          notify: true,
-          observer: '_animateCSS'
-        },
-
-        // Public //
-
-        /**
-        * Boolean value to
-        * state if slides should
-        * auto proceed
-        *
-        * @attribute auto-progress
-        * @type Boolean
-        * @default false
-        */
-        autoProgress: {
-          type: Boolean,
-          value: false,
-          notify: true,
-        },
-        /**
-        * Boolean value to
-        * state if swipe shoud
-        * work
-        *
-        * @attribute disableSwipe
-        * @type Boolean
-        * @default false
-        */
-        disableSwipe: {
-          type: Boolean,
-          value: false
-        },
-        /**
-        * Boolean value to
-        * state if nav should
-        * should hidden
-        *
-        * @attribute hide-nav
-        * @type Boolean
-        * @default false
-        */
-        hideNav: {
-          type: Boolean,
-          value: false,
-          notify: true,
-          reflectToAttribute: true,
-          observer: '_reInit'
-        },
-        /**
-        * Number for storing start
-        * position of slides
-        *
-        * @attribute position
-        * @type Number
-        * @default 0
-        */
-        position: {
-          type: Number,
-          value: 0,
-          notify: true,
-          reflectToAttribute: true,
-          observer: '_posObs'
-        },
-        /**
-        * String to storing
-        * high, low or default
-        * swipe sensitivity
-        *
-        * @attribute sensitivity
-        * @type String
-        * @default 'default'
-        */
-        sensitivity: {
-          type: String,
-          value: 'default',
-          notify: true
-        },
-        /**
-        * Number of seconds
-        * each slide should
-        * remain for
-        *
-        * @attribute slide-duration
-        * @type Number
-        * @default 5
-        */
-        slideDuration: {
-          type: Number,
-          value: 5,
-          notify: true
-        },
-        /**
-        * Number for storing total
-        * number of slides
-        *
-        * @attribute total-slides
-        * @type Number
-        * @default NULL
-        */
-        totalSlides: {
-          type: Number,
-          notify: true,
-          reflectToAttribute: true,
-          observer: '_reInit'
-        },
-        /**
-        * Disable the Key Binding
-        *
-        * @attribute disable-key-bind
-        * @type Boolean
-        * @default false
-        */
-        disableKeyBind: {
-          type: Boolean,
-          value: false,
-          observer: 'disableKeyBindings'
-        },
-        keys: {
-          type: String,
-          value: '',
-          observer: 'enableKeys'
-        }
-      },
-
-      // Enable and disable the Key Bindings//
-      keyBindings: {
-        'right' : '_keyRight',
-        'left'  : '_keyLeft',
-        'space' : '_spaceCatcher',
-        'enter' : '_spaceCatcher',
-      },
-      disableKeyBindings: function() {
-        if (this.disableKeyBind){
-          this._keyBindings = [];
-          document.onkeydown = function(e){
-             e = e || window.event;
-             var k = e.keyCode || e.which;
-             return !(k === 9);
-          }
-        }
-      },
-      enableKeys: function() {
-        if(this.keys === 'enableKeys'){
-          document.onkeydown = function(e){
-            e = e || window.event;
-            var k = e.keyCode || e.which;
-            return k;
-          }
-          this.set('keys','');
-        }
-      },
+( function () {
+  Polymer({
+    is: 'l2t-paper-slider',
+    listeners: {
+      'container.track': '_swipeHandler'
+    },
+    behaviors: [
+      Polymer.IronA11yKeysBehavior
+    ],
+    hostAttributes: {
+      tabindex: 0
+    },
+    properties: {
 
       // Private //
 
       /**
-      * Method for styling
-      * and animating dots
-      */
-      _animateCSS: function() {
-        var deep = this.$.container,
-            indSel = deep.querySelector(".slider__indicator");
-        if (this._dotStyles) {
-          deep.querySelector(".slider__slides").style.transform = "translateX(-" + 100 * this.position + "%)",
-          indSel.style.opacity = "1";
-          indSel.style.left   = "calc(((("+this._dotStyles.marginRight+" + "+this._dotStyles.marginLeft+") + ("+this._dotStyles.paddingRight+" + "+this._dotStyles.paddingLeft+") + "+this._dotStyles.width+") * "+this.position+") + "+this.position+" * ("+this._dotStyles.borderLeftWidth+" + "+this._dotStyles.borderRightWidth+"))";
-          indSel.style.right  = "calc("+((this.totalSlides - (this.position + 1)))+"*(("+this._dotStyles.marginRight+" + "+this._dotStyles.marginLeft+") + ("+this._dotStyles.borderLeftWidth+" + "+this._dotStyles.borderRightWidth+") + ("+this._dotStyles.paddingLeft+" + "+this._dotStyles.paddingRight+") + "+this._dotStyles.width+"))";
-        }
-      },
-      /**
-      * Method for setting
-      * the aria-checked property
-      * of dotElems on position change
+      * Array for storing number
+      * leading up to totalSlides
       *
+      * @attribute _totalDots
+      * @type Array
+      * @default []
       */
-      _ariaChecked: function() {
-        var dotElems = this.$.container.querySelectorAll('.slider__dot');
-        if(dotElems.length > 0) {
-          for (var i = 0; i < this.totalSlides; i++) {
-            dotElems[i].setAttribute("aria-checked", "false");
-          };
-          dotElems[this.position].setAttribute("aria-checked", "true");
-        }
+      _totalDots: {
+        type: Array ,
+        value: [],
+        notify: true,
+        computed: '_createDots(totalSlides)'
       },
       /**
-      * Method for moving
-      * automatically ever
-      * slideDuration seconds
+      * Object for storing
+      * all the styles of the
+      * dot elements
       *
+      * @attribute _dotStyles
+      * @type Object
+      * @default NULL
       */
-      _autoProceed: function() {
-        var this$ = this;
-        var autoProceed = setInterval(function() {
-          this$.moveNext();
-        }, (this$.slideDuration * 1000));
-        this.$.container.addEventListener("mouseover", function() {
-          clearInterval(autoProceed);
-        });
-        this.$.container.addEventListener("mouseout", function() {
-          autoProceed = setInterval(function() {
-            this$.moveNext();
-          }, (this$.slideDuration * 1000));
-        });
-      },
-      /**
-      * Count the slides,
-      * and set totalSlides
-      *
-      */
-      _countSlides: function() {
-        let deep = Polymer.version>="2"?this:this.$.container;
-        this.totalSlides = deep.querySelectorAll("paper-slide").length;
-      },
-      /**
-      * Create the nav dots,
-      * 1 for each slide
-      *
-      */
-      _createDots: function(t) {
-        var array = [], i;
-        for (i = 0; i < t; ++i) {
-          array.push(i);
-        };
-        return array;
-      },
-      /**
-      * Method for moving
-      * to the previous slide or
-      * to the last slide
-      * and setting focus
-      *
-      */
-      _keyLeft: function() {
-        var currentPos = parseInt(this.$.container.getAttribute('data-pos')),
-            nextPos = currentPos > 0 ? (currentPos-1) : (this.totalSlides - 1);
-        this.movePos(nextPos);
-        this.moveFocus(nextPos);
-      },
-      /**
-      * Method for moving
-      * to the next slide or back
-      * to the first slide
-      * and setting focus
-      *
-      */
-      _keyRight: function() {
-        var currentPos = parseInt(this.$.container.getAttribute('data-pos')),
-            nextPos = currentPos < (this.totalSlides - 1) ? (currentPos+1) : 0;
-        this.movePos(nextPos);
-        this.moveFocus(nextPos);
-      },
-      /**
-      * Method to initiate
-      * and animate move
-      *
-      */
-      _moveInd: function(dotElem) {
-        if(dotElem != undefined){
-          //#TODO:   clearInterval(this.moveNext()); ?
-          var sliderElem = this.$.container,
-              indicatorElem = sliderElem.querySelector('.slider__indicator'),
-              currentPos = parseInt(sliderElem.getAttribute('data-pos')),
-              newPos = parseInt(dotElem.getAttribute('aria-posinset')),
-              newDirection = newPos > currentPos ? 'right' : 'left',
-              currentDirection = newPos < currentPos ? 'right' : 'left';
-          indicatorElem.classList.remove('slider__indicator--' + currentDirection);
-          indicatorElem.classList.add('slider__indicator--' + newDirection);
-          this.position = newPos;
-        }
-      },
-      /**
-      * Adds onclick listener
-      * To update the position
-      *
-      */
-      _moveManual: function() {
-        var this$ = this;
-        var dotElems = this.$.container.querySelectorAll('.slider__dot'), i;
-        for (i = 0; i < this.totalSlides; ++i) {
-          dotElems[i].setAttribute("aria-label","Slide "+(parseInt(dotElems[i].getAttribute('aria-posinset'))+1)+" selector");
-          dotElems[i].addEventListener('click', function(e) {
-            this$.movePos(e.target.getAttribute('aria-posinset'));
-          });
-        };
-        if(this.totalSlides) {
-          this._dotStyles = window.getComputedStyle(dotElems[0]);
-        }
-      },
-      /**
-      * Function to store
-      * functions for the
-      * position observer
-      *
-      */
-      _posObs: function() {
-        this._animateCSS();
-        this._setInert();
-        this._ariaChecked();
-        this.fire('change');
-      },
-      /**
-      * Method to reinitialise
-      * on totalSlides change.
-      *
-      */
-      _reInit: function() {
-        var this$ = this;
-        this._animateCSS();
-        setTimeout(function(){
-          this$._moveManual();
-        }, 0);
-      },
-      /**
-      * Method for setting
-      * inert on hidden slides
-      */
-      _setInert: function() {
-        var deep = this.$.container,
-            sliSel = deep.querySelectorAll('paper-slide');
-        for (var i = 0; i < sliSel.length; i++) {
-          if(i != this.position) {
-            sliSel[i].setAttribute("inert", "")
-          }
-        }
-        if(sliSel[this.position]) {
-          sliSel[this.position].removeAttribute("inert");
-        }
-      },
-      /**
-      * Method for moving
-      * to the selected slide
-      * on key press
-      *
-      */
-      _spaceCatcher: function(e) {
-        e.preventDefault();
-        if(this.shadowRoot != null) {
-          var nextPos = this.shadowRoot.activeElement.getAttribute('aria-posinset');
-        } else {
-          var nextPos = document.activeElement.getAttribute('aria-posinset');
-        }
-        if (!nextPos)
-        return;
-        this.movePos(nextPos);
-      },
-      /**
-      * Method for adding
-      * swipe event handler
-      */
-      _swipeHandler: function(e) {
-        if (!(this.disableSwipe)) {
-          var deep = this.$.container;
-          switch(e.detail.state) {
-            case 'start':
-              this.startPosX = e.detail.x;
-              deep.querySelector(".slider__slides").classList.remove('mouseup');
-            break;
-            case 'track':
-              var actualWidth = deep.offsetWidth;
-              var swipeTravel = this.startPosX - e.detail.x;
-              var perActual = this.position==0&&swipeTravel<0?0:this.position==(this.totalSlides-1)&&swipeTravel>0?0:(swipeTravel/actualWidth)*100;
-              var percentMove = perActual>100?(this.position*100)+100:perActual<-100?(this.position*100)-100:perActual+(this.position*100);
-              this.perMov = percentMove<=100*(this.totalSlides-1)?percentMove>=0&&percentMove:this.totalSlides;
-              deep.querySelector(".slider__slides").style.transform = "translateX(-"+this.perMov+"%)";
-            break;
-            case 'end':
-              var senNumber = this.sensitivity == "high" ? 0.25 : this.sensitivity == "low" ? -0.25 : 0;
-              var senDirection = this.perMov > (this.position * 100) ? 1 : -1;
-              var newPos = Math.round((this.perMov / 100) + (senNumber*senDirection));
-              deep.querySelector(".slider__slides").classList.add('mouseup');
-              this.position == newPos ? deep.querySelector(".slider__slides").style.transform = "translateX(-"+this.position*100+"%)" : false;
-              this.movePos(newPos);
-            break;
-          }
-        }
+      _dotStyles: {
+        type: Object,
+        notify: true,
+        observer: '_animateCSS'
       },
 
       // Public //
 
       /**
-      * Method for moving
-      * focus to a different
-      * dot.
+      * Boolean value to
+      * state if slides should
+      * auto proceed
       *
+      * @attribute auto-progress
+      * @type Boolean
+      * @default false
       */
-      moveFocus: function(slide) {
-        var focusEl = this.$.container.querySelectorAll('.slider__dot')[slide];
-        focusEl.focus();
+      autoProgress: {
+        type: Boolean,
+        value: false,
+        notify: true
       },
       /**
-      * Method for moving
-      * to the next slide or back
-      * to the first slide
+      * Boolean value to
+      * state if swipe shoud
+      * work
       *
+      * @attribute disableSwipe
+      * @type Boolean
+      * @default false
       */
-      moveNext: function() {
-        var currentPos = parseInt(this.$.container.getAttribute('data-pos')),
-            nextPos = currentPos < (this.totalSlides - 1) ? (currentPos+1) : 0;
-        this.movePos(nextPos);
+      disableSwipe: {
+        type: Boolean,
+        value: false
       },
       /**
-      * Method for moving
-      * to a specific slide
+      * Boolean value to
+      * state if nav should
+      * should hidden
       *
+      * @attribute hide-nav
+      * @type Boolean
+      * @default false
       */
-      movePos: function(slide) {
-        var nextPos = this.$.container.querySelectorAll('.slider__dot')[slide];
-        this._moveInd(nextPos);
+      hideNav: {
+        type: Boolean,
+        value: false,
+        notify: true,
+        reflectToAttribute: true,
+        observer: '_reInit'
       },
       /**
-      * Method for moving
-      * to the previous slide or
-      * to the last slide
+      * Number for storing start
+      * position of slides
       *
+      * @attribute position
+      * @type Number
+      * @default 0
       */
-      movePrev: function() {
-        var currentPos = parseInt(this.$.container.getAttribute('data-pos')),
-            nextPos = currentPos > 0 ? (currentPos-1) : (this.totalSlides - 1);
-        this.movePos(nextPos);
+      position: {
+        type: Number,
+        value: 0,
+        notify: true,
+        reflectToAttribute: true,
+        observer: '_posObs'
       },
+      /**
+      * String to storing
+      * high, low or default
+      * swipe sensitivity
+      *
+      * @attribute sensitivity
+      * @type String
+      * @default 'default'
+      */
+      sensitivity: {
+        type: String,
+        value: 'default',
+        notify: true
+      },
+      /**
+      * Number of seconds
+      * each slide should
+      * remain for
+      *
+      * @attribute slide-duration
+      * @type Number
+      * @default 5
+      */
+      slideDuration: {
+        type: Number,
+        value: 5,
+        notify: true
+      },
+      /**
+      * Number for storing total
+      * number of slides
+      *
+      * @attribute total-slides
+      * @type Number
+      * @default NULL
+      */
+      totalSlides: {
+        type: Number,
+        notify: true,
+        reflectToAttribute: true,
+        observer: '_reInit'
+      },
+      /**
+      * Disable the Key Binding
+      *
+      * @attribute disable-key-bind
+      * @type Boolean
+      * @default false
+      */
+      disableKeyBind: {
+        type: Boolean,
+        value: false,
+        observer: 'disableKeyBindings'
+      },
+      keys: {
+        type: String,
+        value: '',
+        observer: 'enableKeys'
+      }
+    },
 
-      // Init //
-
-      /**
-      * Starting the scripts
-      *
-      */
-      attached: function() {
-        var this$ = this;
-        this.autoProgress == true
-          ? setTimeout(function(){
-            this$._autoProceed()
-          }, 0)
-          : false;
-        // Strange hack, but it works.
-        setTimeout(function(){
-          this$._moveManual();
-          this$._ariaChecked();
-          this$._countSlides();
-        }, 0);
-
-        //allow vertical scrolling
-        if (Polymer.version >= "2") {
-          Polymer.Gestures.addListener(this.$.container, 'track', e => this._swipeHandler(e));
+    // Enable and disable the Key Bindings//
+    keyBindings: {
+      'right' : '_keyRight',
+      'left'  : '_keyLeft',
+      'space' : '_spaceCatcher',
+      'enter' : '_spaceCatcher'
+    },
+    disableKeyBindings: function() {
+      if (this.disableKeyBind){
+        this._keyBindings = [];
+        document.onkeydown = function(e){
+           e = e || window.event;
+           var k = e.keyCode || e.which;
+           return !(k === 9);
         }
-        this.setScrollDirection('y', this.$.container);
-      },
-    });
-  })();
+      }
+    },
+    enableKeys: function() {
+      if(this.keys === 'enableKeys'){
+        document.onkeydown = function(e){
+          e = e || window.event;
+          var k = e.keyCode || e.which;
+          return k;
+        }
+        this.set('keys','');
+      }
+    },
+
+    // Private //
+
+    /**
+    * Method for styling
+    * and animating dots
+    */
+    _animateCSS: function() {
+      var deep = this.$.container,
+          indSel = deep.querySelector(".slider__indicator");
+      if (this._dotStyles) {
+        deep.querySelector(".slider__slides").style.transform = "translateX(-" + 100 * this.position + "%)",
+        indSel.style.opacity = "1";
+        indSel.style.left   = "calc(((("+this._dotStyles.marginRight+" + "+this._dotStyles.marginLeft+") + ("+this._dotStyles.paddingRight+" + "+this._dotStyles.paddingLeft+") + "+this._dotStyles.width+") * "+this.position+") + "+this.position+" * ("+this._dotStyles.borderLeftWidth+" + "+this._dotStyles.borderRightWidth+"))";
+        indSel.style.right  = "calc("+((this.totalSlides - (this.position + 1)))+"*(("+this._dotStyles.marginRight+" + "+this._dotStyles.marginLeft+") + ("+this._dotStyles.borderLeftWidth+" + "+this._dotStyles.borderRightWidth+") + ("+this._dotStyles.paddingLeft+" + "+this._dotStyles.paddingRight+") + "+this._dotStyles.width+"))";
+      }
+    },
+    /**
+    * Method for setting
+    * the aria-checked property
+    * of dotElems on position change
+    *
+    */
+    _ariaChecked: function() {
+      var dotElems = this.$.container.querySelectorAll('.slider__dot');
+      if(dotElems.length > 0) {
+        for (var i = 0; i < this.totalSlides; i++) {
+          dotElems[i].setAttribute("aria-checked", "false");
+        };
+        dotElems[this.position].setAttribute("aria-checked", "true");
+      }
+    },
+    /**
+    * Method for moving
+    * automatically ever
+    * slideDuration seconds
+    *
+    */
+    _autoProceed: function() {
+      var this$ = this;
+      var autoProceed = setInterval(function() {
+        this$.moveNext();
+      }, (this$.slideDuration * 1000));
+      this.$.container.addEventListener("mouseover", function() {
+        clearInterval(autoProceed);
+      });
+      this.$.container.addEventListener("mouseout", function() {
+        autoProceed = setInterval(function() {
+          this$.moveNext();
+        }, (this$.slideDuration * 1000));
+      });
+    },
+    /**
+    * Count the slides,
+    * and set totalSlides
+    *
+    */
+    _countSlides: function() {
+      var deep = Polymer.version >= "2" ? this : this.$.container;
+      // var deep;
+      // if (Polymer.version >= "2") {
+      //   deep = this;
+      // } else {
+      //   deep = this.$.container;
+      // }
+      this.totalSlides = deep.querySelectorAll("paper-slide").length;
+    },
+    /**
+    * Create the nav dots,
+    * 1 for each slide
+    *
+    */
+    _createDots: function(t) {
+      var array = [], i;
+      for (i = 0; i < t; ++i) {
+        array.push(i);
+      };
+      return array;
+    },
+    /**
+    * Method for moving
+    * to the previous slide or
+    * to the last slide
+    * and setting focus
+    *
+    */
+    _keyLeft: function() {
+      var currentPos = parseInt(this.$.container.getAttribute('data-pos')),
+          nextPos = currentPos > 0 ? (currentPos-1) : (this.totalSlides - 1);
+      this.movePos(nextPos);
+      this.moveFocus(nextPos);
+    },
+    /**
+    * Method for moving
+    * to the next slide or back
+    * to the first slide
+    * and setting focus
+    *
+    */
+    _keyRight: function() {
+      var currentPos = parseInt(this.$.container.getAttribute('data-pos')),
+          nextPos = currentPos < (this.totalSlides - 1) ? (currentPos+1) : 0;
+      this.movePos(nextPos);
+      this.moveFocus(nextPos);
+    },
+    /**
+    * Method to initiate
+    * and animate move
+    *
+    */
+    _moveInd: function(dotElem) {
+      if(dotElem != undefined){
+        //#TODO:   clearInterval(this.moveNext()); ?
+        var sliderElem = this.$.container,
+            indicatorElem = sliderElem.querySelector('.slider__indicator'),
+            currentPos = parseInt(sliderElem.getAttribute('data-pos')),
+            newPos = parseInt(dotElem.getAttribute('aria-posinset')),
+            newDirection = newPos > currentPos ? 'right' : 'left',
+            currentDirection = newPos < currentPos ? 'right' : 'left';
+        indicatorElem.classList.remove('slider__indicator--' + currentDirection);
+        indicatorElem.classList.add('slider__indicator--' + newDirection);
+        this.position = newPos;
+      }
+    },
+    /**
+    * Adds onclick listener
+    * To update the position
+    *
+    */
+    _moveManual: function() {
+      var this$ = this;
+      var dotElems = this.$.container.querySelectorAll('.slider__dot'), i;
+      for (i = 0; i < this.totalSlides; ++i) {
+        dotElems[i].setAttribute("aria-label","Slide "+(parseInt(dotElems[i].getAttribute('aria-posinset'))+1)+" selector");
+        dotElems[i].addEventListener('click', function(e) {
+          this$.movePos(e.target.getAttribute('aria-posinset'));
+        });
+      };
+      if(this.totalSlides) {
+        this._dotStyles = window.getComputedStyle(dotElems[0]);
+      }
+    },
+    /**
+    * Function to store
+    * functions for the
+    * position observer
+    *
+    */
+    _posObs: function() {
+      this._animateCSS();
+      this._setInert();
+      this._ariaChecked();
+      this.fire('change');
+    },
+    /**
+    * Method to reinitialise
+    * on totalSlides change.
+    *
+    */
+    _reInit: function() {
+      var this$ = this;
+      this._animateCSS();
+      setTimeout(function(){
+        this$._moveManual();
+      }, 0);
+    },
+    /**
+    * Method for setting
+    * inert on hidden slides
+    */
+    _setInert: function() {
+      var deep = this.$.container,
+          sliSel = deep.querySelectorAll('paper-slide');
+      for (var i = 0; i < sliSel.length; i++) {
+        if(i != this.position) {
+          sliSel[i].setAttribute("inert", "")
+        }
+      }
+      if(sliSel[this.position]) {
+        sliSel[this.position].removeAttribute("inert");
+      }
+    },
+    /**
+    * Method for moving
+    * to the selected slide
+    * on key press
+    *
+    */
+    _spaceCatcher: function(e) {
+      e.preventDefault();
+      if(this.shadowRoot != null) {
+        var nextPos = this.shadowRoot.activeElement.getAttribute('aria-posinset');
+      } else {
+        var nextPos = document.activeElement.getAttribute('aria-posinset');
+      }
+      if (!nextPos)
+      return;
+      this.movePos(nextPos);
+    },
+    /**
+    * Method for adding
+    * swipe event handler
+    */
+    _swipeHandler: function(e) {
+      if (!(this.disableSwipe)) {
+        var deep = this.$.container;
+        switch(e.detail.state) {
+          case 'start':
+            this.startPosX = e.detail.x;
+            deep.querySelector(".slider__slides").classList.remove('mouseup');
+          break;
+          case 'track':
+            var actualWidth = deep.offsetWidth;
+            var swipeTravel = this.startPosX - e.detail.x;
+            var perActual = this.position==0&&swipeTravel<0?0:this.position==(this.totalSlides-1)&&swipeTravel>0?0:(swipeTravel/actualWidth)*100;
+            var percentMove = perActual>100?(this.position*100)+100:perActual<-100?(this.position*100)-100:perActual+(this.position*100);
+            this.perMov = percentMove<=100*(this.totalSlides-1)?percentMove>=0&&percentMove:this.totalSlides;
+            deep.querySelector(".slider__slides").style.transform = "translateX(-"+this.perMov+"%)";
+          break;
+          case 'end':
+            var senNumber = this.sensitivity == "high" ? 0.25 : this.sensitivity == "low" ? -0.25 : 0;
+            var senDirection = this.perMov > (this.position * 100) ? 1 : -1;
+            var newPos = Math.round((this.perMov / 100) + (senNumber*senDirection));
+            deep.querySelector(".slider__slides").classList.add('mouseup');
+            this.position == newPos ? deep.querySelector(".slider__slides").style.transform = "translateX(-"+this.position*100+"%)" : false;
+            this.movePos(newPos);
+          break;
+        }
+      }
+    },
+
+    // Public //
+
+    /**
+    * Method for moving
+    * focus to a different
+    * dot.
+    *
+    */
+    moveFocus: function(slide) {
+      var focusEl = this.$.container.querySelectorAll('.slider__dot')[slide];
+      focusEl.focus();
+    },
+    /**
+    * Method for moving
+    * to the next slide or back
+    * to the first slide
+    *
+    */
+    moveNext: function() {
+      var currentPos = parseInt(this.$.container.getAttribute('data-pos')),
+          nextPos = currentPos < (this.totalSlides - 1) ? (currentPos+1) : 0;
+      this.movePos(nextPos);
+    },
+    /**
+    * Method for moving
+    * to a specific slide
+    *
+    */
+    movePos: function(slide) {
+      var nextPos = this.$.container.querySelectorAll('.slider__dot')[slide];
+      this._moveInd(nextPos);
+    },
+    /**
+    * Method for moving
+    * to the previous slide or
+    * to the last slide
+    *
+    */
+    movePrev: function() {
+      var currentPos = parseInt(this.$.container.getAttribute('data-pos')),
+          nextPos = currentPos > 0 ? (currentPos-1) : (this.totalSlides - 1);
+      this.movePos(nextPos);
+    },
+
+    // Init //
+
+    /**
+    * Starting the scripts
+    *
+    */
+    attached: function() {
+      var this$ = this;
+      this.autoProgress == true
+        ? setTimeout(function(){
+          this$._autoProceed()
+        }, 0)
+        : false;
+      // Strange hack, but it works.
+      setTimeout(function(){
+        this$._moveManual();
+        this$._ariaChecked();
+        this$._countSlides();
+      }, 0);
+
+      //allow vertical scrolling
+      if (Polymer.version >= "2") {
+        // Polymer.Gestures.addListener(this.$.container, 'track', e => this._swipeHandler(e));
+        var self = this;
+        Polymer.Gestures.addListener(this.$.container, 'track', function(e) {self._swipeHandler(e)});
+      }
+      this.setScrollDirection('y', this.$.container);
+    },
+  });
+})();
 </script>
